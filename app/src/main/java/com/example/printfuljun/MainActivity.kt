@@ -1,21 +1,21 @@
 package com.example.printfuljun
 
-import android.opengl.Visibility
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.widget.ArrayAdapter
-import android.widget.ListView
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentActivity
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.FragmentContainerView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
+import io.reactivex.rxjava3.core.Observable.interval
+import io.reactivex.rxjava3.kotlin.Observables.zip
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import org.json.JSONArray
-import org.json.JSONObject
-import java.lang.Exception
 import java.net.URL
+import java.util.*
+import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
     var listView: RecyclerView? = null
@@ -27,13 +27,14 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         listView = findViewById(R.id.list)
-        var fr = findViewById(R.id.fragment) as FragmentContainerView
+        var fr = findViewById<FragmentContainerView>(R.id.fragment)
         fillTheList()
     }
 
     private fun fillTheList() {
         try {
-            Thread {
+            val thread = Thread {
+                Log.i(TAG, "new request");
                 val APIResponse = URL(API).readText()
                 val arr = JSONArray(APIResponse)
                 for (item in 0 until arr.length()) {
@@ -51,7 +52,13 @@ class MainActivity : AppCompatActivity() {
                     listView!!.adapter = CustomAdapter(listItemsName, listItemsImage, this)
                     listView!!.layoutManager = LinearLayoutManager(this)
                 }
-            }.start()
+
+            }
+            thread.start()
+            Thread.sleep(1000L)
+            thread.interrupt()
+
+
         } catch (e: Exception) {
             Log.e(TAG, e.toString())
         }

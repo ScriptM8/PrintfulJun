@@ -9,15 +9,16 @@ import android.view.View.VISIBLE
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.annotation.UiThread
 import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.bumptech.glide.annotation.GlideModule
 import com.bumptech.glide.request.RequestOptions
+import io.reactivex.rxjava3.core.Observable
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import org.json.JSONArray
-import java.lang.Exception
 import java.net.URL
+import java.util.concurrent.TimeUnit
 
 @GlideModule
 class CrudShowFragment : Fragment(), IFragment {
@@ -28,6 +29,7 @@ class CrudShowFragment : Fragment(), IFragment {
     var img2: ImageView? = null
     var API: String? = null
     var elements: Int? = null
+    var thread: Thread? = null
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -56,6 +58,7 @@ class CrudShowFragment : Fragment(), IFragment {
         img1!!.setOnClickListener {
             (activity as MainActivity).listView!!.visibility = VISIBLE
             this.requireView().visibility = INVISIBLE
+            thread?.interrupt()
         }
     }
 
@@ -71,7 +74,7 @@ class CrudShowFragment : Fragment(), IFragment {
 
     private fun fillTheInfo() {
         try {
-            Thread {
+            thread = Thread {
                 val APIResponse = URL(API).readText()
                 val arr = JSONArray(APIResponse).getJSONObject(elements!!)
                 (activity as MainActivity).runOnUiThread {
@@ -84,7 +87,9 @@ class CrudShowFragment : Fragment(), IFragment {
                         .apply(RequestOptions().override(128, 128)).into(img2!!)
 
                 }
-            }.start()
+            }
+            thread?.start()
+
         } catch (e: Exception) {
             Log.e("TAG", e.toString())
         }
